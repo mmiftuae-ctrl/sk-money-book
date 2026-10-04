@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SK Money Book</title>
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SK Money Book">
+<style>
+:root{
+  --bg:#f4f6f5;--card:#ffffff;--text:#16211f;--muted:#64716e;--line:#e2e7e5;
+  --brand:#0f766e;--brand-soft:#d7efec;--in:#15803d;--in-soft:#dcf3e3;--out:#c2410c;--out-soft:#fbe5da;
+  --shadow:0 1px 3px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f1514;--card:#18201f;--text:#e7eeec;--muted:#93a29e;--line:#26302e;
+  --brand:#2bb3a5;--brand-soft:#173634;--in:#4ade80;--in-soft:#16321f;--out:#fb923c;--out-soft:#3a2216;--shadow:none}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--brand);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:14px}
+main{padding:14px 16px calc(90px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.tabs button{flex:1;border:0;background:none;color:var(--muted);padding:10px 4px 9px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--brand);font-weight:600}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:8px}
+.between{justify-content:space-between}
+.muted{color:var(--muted);font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:6px 12px;font-size:13px}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{border-radius:12px;padding:10px;background:var(--card);border:1px solid var(--line)}
+.stat .l{font-size:12px;color:var(--muted)}
+.stat .v{font-size:clamp(12px,3.8vw,16px);font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.in{color:var(--in)}.out{color:var(--out)}
+.list .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.list .item:last-child{border-bottom:0}
+.badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:700;flex:none}
+.badge.in{background:var(--in-soft)}.badge.out{background:var(--out-soft)}.badge.fund{background:var(--brand-soft);color:var(--brand)}
+.item .main{flex:1;min-width:0}
+.item .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .amt{font-weight:700;white-space:nowrap}
+.del{border:0;background:none;color:var(--muted);font-size:18px;padding:4px 6px}
+.dateh{font-size:12px;color:var(--muted);margin:10px 0 2px;font-weight:600}
+.btn{border:0;border-radius:10px;padding:11px 14px;font-size:15px;font-weight:600;background:var(--brand);color:#fff;width:100%}
+.btn.sec{background:var(--brand-soft);color:var(--brand)}
+.btn.red{background:var(--out-soft);color:var(--out)}
+.fab{position:fixed;right:18px;bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--brand);color:#fff;font-size:30px;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:6}
+.empty{text-align:center;color:var(--muted);padding:26px 10px}
+/* sheet */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.sheet{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet h2{margin:0 0 12px;font-size:18px}
+label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;border:1px solid var(--line)}
+.seg button{flex:1;border:0;background:none;padding:9px;border-radius:8px;font-weight:600;color:var(--muted);font-size:14px}
+.seg button.on.in{background:var(--in-soft);color:var(--in)}
+.seg button.on.out{background:var(--out-soft);color:var(--out)}
+.seg button.on.n{background:var(--card);color:var(--brand)}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:14px}
+.checks input{width:auto;margin:0}
+.actions{display:flex;gap:8px;margin-top:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 4px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+.settle{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.settle:last-child{border-bottom:0}
+.settle b{white-space:nowrap}
+.arrow{color:var(--muted)}
+.tourcard{cursor:pointer}
+ .frm{border-top:1px solid var(--line);margin-top:12px}
+.fr{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:4px 0;margin:0;min-height:50px;cursor:pointer}
+.fr>span{width:92px;flex:none;color:var(--muted);font-size:14px}
+.fr input{border:0;background:none;padding:10px 0;border-radius:0}
+.fr input:focus{outline:none;box-shadow:inset 0 -2px 0 var(--brand)}
+.fr .cursel{width:auto;flex:none;padding:6px 8px}
+.fr .pv{flex:1;padding:10px 0;font-size:16px}.fr .pv.ph{color:var(--muted)}
+.picker{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);display:none;max-height:60vh;overflow:auto;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(0,0,0,.2)}
+.picker.show{display:block}
+.pkh{display:flex;align-items:center;gap:6px;background:#111;color:#fff;padding:12px 16px;position:sticky;top:0}
+.pkh b{font-size:17px}.pkh button{background:none;border:0;color:#fff;font-size:20px;padding:4px 10px;border-radius:8px}
+.pkh button.on{background:rgba(255,255,255,.2)}
+.pkhint{font-size:13px;color:var(--muted);padding:8px 16px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.grid button{border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card);color:var(--text);padding:18px 6px;font-size:15px;font-weight:500}
+.grid button:nth-child(3n){border-right:0}
+.lock{position:fixed;inset:0;z-index:40;background:var(--brand);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));text-align:center;overflow:auto}
+.lock.show{display:flex}
+.lock h2{margin:8px 0 4px;font-size:20px}.lock p{margin:4px 0 0;opacity:.85;font-size:14px;max-width:320px}
+.lock .logo{font-size:40px}
+.dots{display:flex;gap:16px;margin:26px 0 8px}.dots i{width:16px;height:16px;border-radius:50%;border:2px solid #fff}.dots i.f{background:#fff}
+.dots.shake{animation:sh .4s}@keyframes sh{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.lerr{min-height:20px;font-size:14px;color:#ffe4c4}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;margin-top:10px}
+.pad button{width:72px;height:72px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:28px;font-weight:500}
+.pad button:active{background:rgba(255,255,255,.35)}.pad button.ghost{background:none;font-size:15px}
+.llink{background:none;border:0;color:#fff;text-decoration:underline;font-size:15px;margin-top:18px;padding:8px}
+.lock .box{width:100%;max-width:340px;text-align:left;margin-top:18px}
+.lock .box label{display:block;font-size:13px;margin:10px 0 4px;opacity:.9}
+.lock .box select,.lock .box input{background:#fff;color:#16211f;border:0}
+.lock .box .btn{background:#fff;color:var(--brand);margin-top:16px}
+.toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;z-index:30;display:none}
+</style>
+</head>
+<body>
+<header>
+  <button id="backBtn" style="display:none" aria-label="Back">←</button>
+  <h1 id="title">SK Money Book</h1>
+  <button id="langBtn">বাংলা</button>
+</header>
+<main id="app"></main>
+<button class="fab" id="fab" aria-label="Add">+</button>
+<nav class="tabs">
+  <button data-tab="daily" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7h18v12H3z"/><path d="M3 7l3-3h12l3 3"/><path d="M16 13h2"/></svg>
+    <span data-i="daily"></span></button>
+  <button data-tab="tours">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5"/><path d="M15 14.5c3 0 6 1.5 6 4.5"/></svg>
+    <span data-i="tours"></span></button>
+  <button data-tab="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    <span data-i="settings"></span></button>
+</nav>
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div class="picker" id="picker"></div>
+<div class="lock" id="lock"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- i18n ---------- */
+const T={
+en:{app:"SK Money Book",daily:"Daily",tours:"Tour Split",settings:"Settings",income:"Money In",expense:"Money Out",balance:"Balance",
+today:"Today",month:"This month",all:"All",noEntries:"No entries yet. Tap + to add.",addEntry:"Add entry",editEntry:"Edit entry",amount:"Amount",
+currency:"Currency",category:"Category",note:"Note",date:"Date",save:"Save",cancel:"Cancel",delete:"Delete",confirmDel:"Delete this?",
+newTour:"New tour",tourName:"Tour name",members:"Members (one name per line)",holder:"Who holds the fund money?",noTours:"No tours yet. Tap + to start one.",
+fund:"Fund",expenses:"Expenses",settle:"Settle",giveFund:"Add to fund",addExp:"Add expense",gave:"To fund",from:"From",
+desc:"Description",paidBy:"Paid by",fromFund:"From fund",splitAmong:"Split among",selectAll:"All",totalFund:"Fund collected",totalSpent:"Total spent",
+fundLeft:"Fund left",perHead:"Share",paid:"Paid self",net:"Balance",pays:"pays",allSettled:"Everyone is settled.",shareWA:"Share on WhatsApp",
+addMember:"Add member",memberName:"Member name",deleteTour:"Delete tour",defCur:"Default currency",language:"Language",backup:"Backup",
+exportData:"Export backup file",importData:"Import backup file",importOk:"Backup restored",copied:"Copied",saved:"Saved",
+needAmount:"Enter an amount",needMembers:"Add at least 2 members",needSplit:"Select at least one person",held:"held by",
+summary:"Summary",gets:"gets back",owes:"owes",noExp:"No expenses yet.",noFund:"No money collected yet.",
+transfer:"Transfer",account:"Account",toAccount:"To account",descr:"Description",cont:"Continue",accounts:"Accounts",add:"Add",pick:"Select",renameHint:"New name (leave empty to delete)",editMode:"Edit mode: tap to rename / delete",sameAcc:"Choose two different accounts",emojiQ:"Emoji (optional)",
+security:"Security",setPin:"Create a 4-digit PIN",confirmPin:"Enter the PIN again",enterPin:"Enter PIN",wrongPin:"Wrong PIN",pinMismatch:"PINs don't match, try again",
+forgot:"Forgot PIN?",secQ:"Security question",secA:"Your answer",secHelp:"If you forget the PIN, you can reset it by answering this question.",
+wrongAns:"Answer doesn't match",newPin:"Set a new PIN",changePin:"Change PIN",changeQ:"Change security question",lockNow:"Lock now",
+autoLock:"Auto-lock after leaving the app",immediately:"Immediately",min1:"1 minute",min5:"5 minutes",tooMany:"Too many tries. Wait",sec:"sec",
+next:"Next",back:"Back",pinOk:"PIN saved",welcome:"Welcome! Let's secure your app.",
+qs:["Your mother's name?","Your birth village / town?","Your first school's name?","Your best friend's name?","Your favourite food?"],
+installTip:"Install: Android – Chrome menu › Install app. iPhone – Safari Share › Add to Home Screen.",
+dataNote:"Data is saved only on this device. Export a backup regularly.",
+cats_in:["Salary","Business","Gift","Return","Other"],cats_out:["Food","Transport","Rent","Bills","Shopping","Family","Health","Other"]},
+bn:{app:"SK মানি বুক",daily:"দৈনিক",tours:"ট্যুর ভাগ",settings:"সেটিংস",income:"আয়",expense:"খরচ",balance:"ব্যালেন্স",
+today:"আজ",month:"এই মাস",all:"সব",noEntries:"এখনো কোনো হিসাব নেই। + চাপুন।",addEntry:"হিসাব যোগ করুন",editEntry:"হিসাব বদলান",amount:"টাকার পরিমাণ",
+currency:"মুদ্রা",category:"ধরন",note:"নোট",date:"তারিখ",save:"সেভ",cancel:"বাতিল",delete:"মুছুন",confirmDel:"মুছে ফেলবেন?",
+newTour:"নতুন ট্যুর",tourName:"ট্যুরের নাম",members:"সদস্য (প্রতি লাইনে একজন)",holder:"ফান্ডের টাকা কার কাছে থাকবে?",noTours:"এখনো কোনো ট্যুর নেই। + চাপুন।",
+fund:"ফান্ড",expenses:"খরচ",settle:"হিসাব মেটানো",giveFund:"ফান্ডে টাকা",addExp:"খরচ যোগ",gave:"ফান্ডে",from:"কে দিল",
+desc:"বিবরণ",paidBy:"কে টাকা দিল",fromFund:"ফান্ড থেকে",splitAmong:"কাদের মধ্যে ভাগ",selectAll:"সবাই",totalFund:"ফান্ডে জমা",totalSpent:"মোট খরচ",
+fundLeft:"ফান্ডে বাকি",perHead:"ভাগ",paid:"নিজে খরচ",net:"ব্যালেন্স",pays:"দেবে",allSettled:"সবার হিসাব মিলে গেছে।",shareWA:"WhatsApp এ পাঠান",
+addMember:"সদস্য যোগ",memberName:"সদস্যের নাম",deleteTour:"ট্যুর মুছুন",defCur:"ডিফল্ট মুদ্রা",language:"ভাষা",backup:"ব্যাকআপ",
+exportData:"ব্যাকআপ ফাইল নিন",importData:"ব্যাকআপ ফাইল দিন",importOk:"ব্যাকআপ ফিরে এসেছে",copied:"কপি হয়েছে",saved:"সেভ হয়েছে",
+needAmount:"টাকার পরিমাণ দিন",needMembers:"কমপক্ষে ২ জন সদস্য দিন",needSplit:"অন্তত একজন বাছুন",held:"রাখছে",
+summary:"সারাংশ",gets:"ফেরত পাবে",owes:"দেবে",noExp:"এখনো কোনো খরচ নেই।",noFund:"এখনো কেউ টাকা দেয়নি।",
+transfer:"ট্রান্সফার",account:"অ্যাকাউন্ট",toAccount:"কোন অ্যাকাউন্টে",descr:"বিস্তারিত",cont:"আরও যোগ",accounts:"অ্যাকাউন্ট",add:"যোগ করুন",pick:"বাছুন",renameHint:"নতুন নাম (মুছতে খালি রাখুন)",editMode:"এডিট মোড: নাম বদলাতে / মুছতে চাপুন",sameAcc:"দুটি আলাদা অ্যাকাউন্ট বাছুন",emojiQ:"ইমোজি (ঐচ্ছিক)",
+security:"নিরাপত্তা",setPin:"৪ সংখ্যার PIN দিন",confirmPin:"আবার PIN দিন",enterPin:"PIN দিন",wrongPin:"ভুল PIN",pinMismatch:"PIN মেলেনি, আবার দিন",
+forgot:"PIN ভুলে গেছেন?",secQ:"নিরাপত্তা প্রশ্ন",secA:"আপনার উত্তর",secHelp:"PIN ভুলে গেলে এই প্রশ্নের উত্তর দিয়ে নতুন PIN দিতে পারবেন।",
+wrongAns:"উত্তর মেলেনি",newPin:"নতুন PIN দিন",changePin:"PIN বদলান",changeQ:"নিরাপত্তা প্রশ্ন বদলান",lockNow:"এখনই লক করুন",
+autoLock:"অ্যাপ থেকে বের হলে লক হবে",immediately:"সাথে সাথে",min1:"১ মিনিট পর",min5:"৫ মিনিট পর",tooMany:"অনেকবার ভুল। অপেক্ষা করুন",sec:"সেকেন্ড",
+next:"পরবর্তী",back:"পেছনে",pinOk:"PIN সেভ হয়েছে",welcome:"স্বাগতম! চলুন অ্যাপটি সুরক্ষিত করি।",
+qs:["আপনার মায়ের নাম?","আপনার জন্মস্থান (গ্রাম/শহর)?","আপনার প্রথম স্কুলের নাম?","আপনার সবচেয়ে কাছের বন্ধুর নাম?","আপনার প্রিয় খাবার?"],
+installTip:"ইনস্টল: Android – Chrome মেনু › Install app। iPhone – Safari Share › Add to Home Screen।",
+dataNote:"ডেটা শুধু এই ডিভাইসে থাকে। মাঝে মাঝে ব্যাকআপ নিন।",
+cats_in:["বেতন","ব্যবসা","উপহার","ফেরত","অন্যান্য"],cats_out:["খাবার","যাতায়াত","ভাড়া","বিল","কেনাকাটা","পরিবার","স্বাস্থ্য","অন্যান্য"]}
+};
+const CUR={INR:"₹",AED:"AED ",BDT:"৳"};
+const CURS=["AED","INR","BDT"];
+
+/* ---------- state ---------- */
+const KEY="moneybook_v1";
+const DEF={in:[["i_salary","💰","Salary","বেতন"],["i_business","💼","Business","ব্যবসা"],["i_bonus","🏅","Bonus","বোনাস"],["i_allow","🤑","Allowance","ভাতা"],["i_petty","💵","Petty cash","খুচরা টাকা"],["i_extra","➕","Extra income","বাড়তি আয়"],["i_gift","🎁","Gift","উপহার"],["i_return","↩️","Return","ফেরত"],["i_other","📦","Other","অন্যান্য"]],
+ out:[["o_food","🍔","Food","খাবার"],["o_transport","🚌","Transport","যাতায়াত"],["o_rent","🏠","Rent","ভাড়া"],["o_bills","💡","Bills","বিল"],["o_shopping","🛒","Shopping","কেনাকাটা"],["o_family","👪","Family","পরিবার"],["o_health","💊","Health","স্বাস্থ্য"],["o_mobile","📱","Mobile","মোবাইল"],["o_other","📦","Other","অন্যান্য"]],
+ acc:[["a_cash","💵","Cash","নগদ"],["a_bank","🏦","Bank","ব্যাংক"],["a_card","💳","Credit card","ক্রেডিট কার্ড"]]};
+const mk=a=>a.map(([id,e,en,bn])=>({id,e,en,bn}));
+const OLD_IN=["i_salary","i_business","i_gift","i_return","i_other"],OLD_OUT=["o_food","o_transport","o_rent","o_bills","o_shopping","o_family","o_health","o_other"];
+function load(){let d;try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!d||!d.entries)d={lang:"en",defCur:"AED",entries:[],tours:[]};
+  return migrate(d)}
+function migrate(d){
+  d.cats=d.cats||{in:mk(DEF.in),out:mk(DEF.out)};d.accs=d.accs||mk(DEF.acc);
+  d.entries.forEach(e=>{if(typeof e.cat==="number")e.cat=(e.type==="in"?OLD_IN:OLD_OUT)[e.cat]||(e.type==="in"?"i_other":"o_other");if(!e.acc)e.acc="a_cash"});
+  return d}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Storage error")}}
+const t=k=>T[S.lang][k]??T.en[k];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const r2=n=>Math.round(n*100)/100;
+const fmt=(n,c)=>(n<0?"-":"")+CUR[c]+Math.abs(r2(n)).toLocaleString(S.lang==="bn"?"bn-BD":"en-US",{maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const lbl=c=>c?(c.name||c[S.lang]||c.en):"—";
+const findCat=(type,id)=>(S.cats[type]||[]).find(c=>c.id===id);
+const findAcc=id=>S.accs.find(a=>a.id===id);
+function catName(type,id){const c=findCat(type,id);return c?((c.e?c.e+" ":"")+lbl(c)):"—"}
+function accName(id){const a=findAcc(id);return a?lbl(a):"—"}
+
+/* ---------- view state ---------- */
+let V={tab:"daily",period:"month",cur:null,tourId:null,tourTab:"exp"};
+const $=s=>document.querySelector(s);
+const app=$("#app");
+
+function render(){
+  document.documentElement.lang=S.lang;
+  document.querySelectorAll("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===V.tab));
+  $("#langBtn").textContent=S.lang==="en"?"বাংলা":"English";
+  const inTour=V.tab==="tours"&&V.tourId;
+  $("#backBtn").style.display=inTour?"":"none";
+  $("#fab").style.display=V.tab==="settings"?"none":"";
+  if(V.tab==="daily")renderDaily();
+  else if(V.tab==="tours")inTour?renderTour():renderTours();
+  else renderSettings();
+}
+
+/* ---------- DAILY ---------- */
+function inPeriod(d){if(V.period==="all")return true;const td=today();return V.period==="today"?d===td:d.slice(0,7)===td.slice(0,7)}
+function renderDaily(){
+  $("#title").textContent=t("app");
+  const cur=V.cur||S.defCur;
+  const all=S.entries.filter(e=>e.cur===cur);
+  const list=all.filter(e=>inPeriod(e.date)).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const inc=list.filter(e=>e.type==="in").reduce((s,e)=>s+e.amount,0);
+  const out=list.filter(e=>e.type==="out").reduce((s,e)=>s+e.amount,0);
+  let h=`<div class="chips">${["today","month","all"].map(p=>`<button class="chip ${V.period===p?"on":""}" data-period="${p}">${t(p)}</button>`).join("")}
+    <span style="flex:1"></span>${CURS.map(c=>`<button class="chip ${cur===c?"on":""}" data-cur="${c}">${c}</button>`).join("")}</div>
+  <div class="stats"><div class="stat"><div class="l">${t("income")}</div><div class="v in">${fmt(inc,cur)}</div></div>
+  <div class="stat"><div class="l">${t("expense")}</div><div class="v out">${fmt(out,cur)}</div></div>
+  <div class="stat"><div class="l">${t("balance")}</div><div class="v">${fmt(inc-out,cur)}</div></div></div>`;
+  // account balances (all time)
+  const ab={};all.forEach(e=>{const v=e.amount;if(e.type==="in")ab[e.acc]=(ab[e.acc]||0)+v;else if(e.type==="out")ab[e.acc]=(ab[e.acc]||0)-v;else{ab[e.acc]=(ab[e.acc]||0)-v;ab[e.to]=(ab[e.to]||0)+v}});
+  const accRows=S.accs.filter(a=>ab[a.id]).map(a=>`<div class="row between" style="padding:5px 0;font-size:14px"><span>${a.e||""} ${esc(lbl(a))}</span><b class="${ab[a.id]<0?"out":""}">${fmt(ab[a.id],cur)}</b></div>`).join("");
+  if(accRows)h+=`<div class="card"><div class="muted" style="margin-bottom:4px">${t("accounts")}</div>${accRows}</div>`;
+  if(!list.length)h+=`<div class="card empty">${t("noEntries")}</div>`;
+  else{
+    const bc={};list.filter(e=>e.type==="out").forEach(e=>bc[e.cat]=(bc[e.cat]||0)+e.amount);
+    const cats=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
+    if(cats.length){h+=`<div class="card"><div class="muted" style="margin-bottom:8px">${t("expense")} · ${t("category")}</div>`+
+      cats.map(([c,v])=>`<div style="margin:6px 0"><div class="row between" style="font-size:14px"><span>${esc(catName("out",c))}</span><b>${fmt(v,cur)}</b></div>
+      <div style="height:6px;background:var(--bg);border-radius:4px;margin-top:3px"><div style="height:6px;border-radius:4px;background:var(--out);width:${(v/out*100).toFixed(1)}%"></div></div></div>`).join("")+`</div>`}
+    h+=`<div class="card list">`;let last="";
+    list.forEach(e=>{if(e.date!==last){h+=`<div class="dateh">${fmtDate(e.date)}</div>`;last=e.date}
+      const tr=e.type==="tr";
+      const title=tr?`${esc(accName(e.acc))} → ${esc(accName(e.to))}`:esc(catName(e.type,e.cat));
+      const sub=[tr?t("transfer"):accName(e.acc),e.note].filter(Boolean).map(esc).join(" · ");
+      h+=`<div class="item" data-edit="${e.id}"><div class="badge ${tr?"fund":e.type}">${tr?"⇄":e.type==="in"?"↓":"↑"}</div>
+      <div class="main"><div class="t">${title}</div><div class="muted">${sub}</div></div>
+      <div class="amt ${tr?"":e.type}">${tr?"":e.type==="in"?"+":"−"}${fmt(e.amount,e.cur)}</div></div>`});
+    h+=`</div>`}
+  app.innerHTML=h;
+}
+function fmtDate(d){return new Date(d+"T00:00").toLocaleDateString(S.lang==="bn"?"bn-BD":"en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}
+
+/* entry form (Income / Expense / Transfer) */
+let F=null;
+function entryForm(id,keep){
+  const old=id?S.entries.find(x=>x.id===id):null;
+  F=old?{...old}:{type:keep?.type||"out",amount:"",cur:keep?.cur||V.cur||S.defCur,cat:keep?.type?null:null,acc:keep?.acc||"a_cash",to:null,note:"",desc:"",date:keep?.date||today()};
+  F.editId=id||null;drawForm();
+  if(!id)setTimeout(()=>$("#fAmt")&&$("#fAmt").focus(),150);
+}
+function drawForm(){
+  const tr=F.type==="tr";
+  openSheet(`<h2>${t(F.editId?"editEntry":"addEntry")}</h2>
+  <div class="seg" id="typeSeg">${[["in","income"],["out","expense"],["tr","transfer"]].map(([k,l])=>`<button class="${k==="tr"?"n":k} ${F.type===k?"on":""}" data-ty="${k}">${t(l)}</button>`).join("")}</div>
+  <div class="frm">
+  <label class="fr"><span>${t("date")}</span><input id="fDate" type="date" value="${F.date}"></label>
+  <label class="fr"><span>${t("amount")}</span><input id="fAmt" type="number" inputmode="decimal" step="any" value="${F.amount}" placeholder="0"><select id="fCur" class="cursel">${CURS.map(c=>`<option ${c===F.cur?"selected":""}>${c}</option>`).join("")}</select></label>
+  ${tr?"":`<div class="fr" data-pick="cat"><span>${t("category")}</span><div class="pv ${F.cat?"":"ph"}">${F.cat?esc(catName(F.type,F.cat)):t("pick")}</div></div>`}
+  <div class="fr" data-pick="acc"><span>${t(tr?"from":"account")}</span><div class="pv">${esc(accName(F.acc))}</div></div>
+  ${tr?`<div class="fr" data-pick="to"><span>${t("toAccount")}</span><div class="pv ${F.to?"":"ph"}">${F.to?esc(accName(F.to)):t("pick")}</div></div>`:""}
+  <label class="fr"><span>${t("note")}</span><input id="fNote" value="${esc(F.note)}"></label>
+  </div>
+  <textarea id="fDesc" rows="2" placeholder="${t("descr")}" style="margin-top:12px">${esc(F.desc||"")}</textarea>
+  <div class="actions">${F.editId?`<button class="btn red" id="fDel" style="flex:1">${t("delete")}</button>`:""}<button class="btn" id="fSave" style="flex:2">${t("save")}</button>${F.editId?"":`<button class="btn sec" id="fCont" style="flex:1">${t("cont")}</button>`}</div>`);
+  const sync=()=>{F.date=$("#fDate").value;F.amount=$("#fAmt").value;F.cur=$("#fCur").value;F.note=$("#fNote").value;F.desc=$("#fDesc").value};
+  $("#typeSeg").onclick=ev=>{const b=ev.target.closest("button");if(!b||b.dataset.ty===F.type)return;sync();F.type=b.dataset.ty;F.cat=null;drawForm();if(F.type!=="tr")openPicker("cat")};
+  $("#sheet").querySelectorAll("[data-pick]").forEach(el=>el.onclick=()=>{sync();openPicker(el.dataset.pick)});
+  const doSave=cont=>{sync();const amt=parseFloat(F.amount);if(!(amt>0))return toast(t("needAmount"));
+    if(F.type!=="tr"&&!F.cat)return openPicker("cat");
+    if(F.type==="tr"&&(!F.to||F.to===F.acc))return toast(t("sameAcc"));
+    const ne={id:F.editId||uid(),type:F.type,amount:r2(amt),cur:F.cur,cat:F.type==="tr"?null:F.cat,acc:F.acc,to:F.type==="tr"?F.to:null,note:F.note.trim(),desc:F.desc.trim(),date:F.date||today()};
+    if(F.editId)S.entries[S.entries.findIndex(x=>x.id===F.editId)]=ne;else S.entries.push(ne);
+    V.cur=ne.cur;save();render();toast(t("saved"));
+    if(cont)entryForm(null,ne);else closeSheet()};
+  $("#fSave").onclick=()=>doSave(false);
+  if($("#fCont"))$("#fCont").onclick=()=>doSave(true);
+  if(F.editId)$("#fDel").onclick=()=>{if(confirm(t("confirmDel"))){S.entries=S.entries.filter(x=>x.id!==F.editId);save();closeSheet();render()}};
+}
+/* grid picker like the bottom panel */
+let PK={kind:null,edit:false};
+function openPicker(kind){PK={kind,edit:false};drawPicker()}
+function closePicker(){$("#picker").classList.remove("show")}
+function pickList(){return PK.kind==="cat"?S.cats[F.type]:S.accs}
+function drawPicker(){
+  const items=pickList();const title=PK.kind==="cat"?t("category"):PK.kind==="to"?t("toAccount"):t("account");
+  $("#picker").innerHTML=`<div class="pkh"><b>${title}</b><span style="flex:1"></span>
+    <button id="pkEdit" class="${PK.edit?"on":""}" aria-label="Edit">✎</button><button id="pkX" aria-label="Close">✕</button></div>
+    ${PK.edit?`<div class="pkhint">${t("editMode")}</div>`:""}
+    <div class="grid">${items.map(c=>`<button data-id="${c.id}">${c.e?c.e+" ":""}${esc(lbl(c))}</button>`).join("")}<button data-add="1">＋ ${t("add")}</button></div>`;
+  $("#picker").classList.add("show");
+  $("#pkX").onclick=closePicker;
+  $("#pkEdit").onclick=()=>{PK.edit=!PK.edit;drawPicker()};
+  $("#picker").querySelector(".grid").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+    const list=pickList();
+    if(b.dataset.add){const n=prompt(t("add"));if(!n||!n.trim())return;const em=prompt(t("emojiQ"),"")||"";
+      const it={id:uid(),e:em.trim(),name:n.trim()};list.push(it);save();choose(it.id);return}
+    const id=b.dataset.id;
+    if(PK.edit){const it=list.find(x=>x.id===id);const n=prompt(t("renameHint"),lbl(it));if(n===null)return;
+      if(!n.trim()){if(confirm(t("confirmDel"))){list.splice(list.indexOf(it),1)}}else it.name=n.trim();
+      save();drawPicker();drawForm();return}
+    choose(id)};
+}
+function choose(id){if(PK.kind==="cat")F.cat=id;else if(PK.kind==="acc")F.acc=id;else F.to=id;closePicker();drawForm()}
+
+/* ---------- TOURS ---------- */
+function calc(tr){
+  const n=tr.members.length,paid=Array(n).fill(0),share=Array(n).fill(0),gave=Array(n).fill(0);
+  let fund=0,fromFund=0,spent=0;
+  tr.contribs.forEach(c=>{gave[c.m]+=c.amount;fund+=c.amount});
+  tr.exps.forEach(x=>{spent+=x.amount;
+    if(x.paidBy==="fund")fromFund+=x.amount;else paid[x.paidBy]+=x.amount;
+    const per=x.amount/x.split.length;x.split.forEach(i=>share[i]+=per)});
+  // Treasurer holds fund: contributions are money given to treasurer; fund expenses paid by treasurer.
+  const h=tr.holder;
+  const bal=tr.members.map((_,i)=>{let b=gave[i]+paid[i]-share[i];if(i===h)b+=fromFund-fund;return r2(b)});
+  // greedy settlement
+  const cr=[],db=[];bal.forEach((b,i)=>{if(b>0.004)cr.push([i,b]);else if(b<-0.004)db.push([i,-b])});
+  cr.sort((a,b)=>b[1]-a[1]);db.sort((a,b)=>b[1]-a[1]);
+  const tx=[];let i=0,j=0;
+  while(i<db.length&&j<cr.length){const a=Math.min(db[i][1],cr[j][1]);if(a>0.004)tx.push([db[i][0],cr[j][0],r2(a)]);
+    db[i][1]-=a;cr[j][1]-=a;if(db[i][1]<0.005)i++;if(cr[j][1]<0.005)j++}
+  return{gave,paid,share,bal,tx,fund,fromFund,spent,left:fund-fromFund};
+}
+function renderTours(){
+  $("#title").textContent=t("tours");
+  if(!S.tours.length){app.innerHTML=`<div class="card empty">${t("noTours")}</div>`;return}
+  app.innerHTML=S.tours.slice().reverse().map(tr=>{const c=calc(tr);return`<div class="card tourcard" data-tour="${tr.id}">
+    <div class="row between"><b style="font-size:16px">${esc(tr.name)}</b><span class="muted">${tr.members.length} 👤</span></div>
+    <div class="row between muted" style="margin-top:6px"><span>${t("totalSpent")}: <b class="out">${fmt(c.spent,tr.cur)}</b></span><span>${t("fundLeft")}: <b>${fmt(c.left,tr.cur)}</b></span></div></div>`}).join("");
+}
+function tourForm(){
+  openSheet(`<h2>${t("newTour")}</h2>
+  <label class="f">${t("tourName")}</label><input id="tName" placeholder="Cox's Bazar 2026">
+  <label class="f">${t("currency")}</label><select id="tCur">${CURS.map(c=>`<option ${c===S.defCur?"selected":""}>${c}</option>`).join("")}</select>
+  <label class="f">${t("members")}</label><textarea id="tMem" rows="5" placeholder="Rasel&#10;Karim&#10;Rahim"></textarea>
+  <div class="actions"><button class="btn sec" onclick="closeSheet()" style="flex:1">${t("cancel")}</button><button class="btn" id="tSave" style="flex:2">${t("save")}</button></div>`);
+  $("#tSave").onclick=()=>{const m=[...new Set($("#tMem").value.split(/\n|,/).map(s=>s.trim()).filter(Boolean))];
+    if(m.length<2)return toast(t("needMembers"));
+    const tr={id:uid(),name:$("#tName").value.trim()||t("newTour"),cur:$("#tCur").value,members:m,holder:0,contribs:[],exps:[]};
+    S.tours.push(tr);save();closeSheet();V.tourId=tr.id;V.tourTab="fund";render()};
+}
+const curTour=()=>S.tours.find(x=>x.id===V.tourId);
+function renderTour(){
+  const tr=curTour();if(!tr){V.tourId=null;return render()}
+  $("#title").textContent=tr.name;const c=calc(tr),cu=tr.cur;
+  let h=`<div class="stats"><div class="stat"><div class="l">${t("totalFund")}</div><div class="v">${fmt(c.fund,cu)}</div></div>
+  <div class="stat"><div class="l">${t("totalSpent")}</div><div class="v out">${fmt(c.spent,cu)}</div></div>
+  <div class="stat"><div class="l">${t("fundLeft")}</div><div class="v">${fmt(c.left,cu)}</div></div></div>
+  <div class="seg" style="margin-bottom:12px" id="tTabs">${[["fund","fund"],["exp","expenses"],["settle","settle"]].map(([k,l])=>`<button class="n ${V.tourTab===k?"on":""}" data-tt="${k}">${t(l)}</button>`).join("")}</div>`;
+  if(V.tourTab==="fund"){
+    h+=`<div class="card"><label class="f" style="margin-top:0">${t("holder")}</label><select id="holderSel">${tr.members.map((m,i)=>`<option value="${i}" ${i===tr.holder?"selected":""}>${esc(m)}</option>`).join("")}</select></div>`;
+    h+=tr.contribs.length?`<div class="card list">${tr.contribs.slice().reverse().map(x=>`<div class="item"><div class="badge fund">${esc(tr.members[x.m][0]||"?")}</div>
+      <div class="main"><div class="t">${esc(tr.members[x.m])}</div><div class="muted">${fmtDate(x.date)}${x.note?" · "+esc(x.note):""}</div></div>
+      <div class="amt">${fmt(x.amount,cu)}</div><button class="del" data-delc="${x.id}">×</button></div>`).join("")}</div>`:`<div class="card empty">${t("noFund")}</div>`;
+  }else if(V.tourTab==="exp"){
+    h+=tr.exps.length?`<div class="card list">${tr.exps.slice().reverse().map(x=>`<div class="item" data-edx="${x.id}"><div class="badge out">↑</div>
+      <div class="main"><div class="t">${esc(x.desc||"—")}</div><div class="muted">${x.paidBy==="fund"?t("fromFund"):esc(tr.members[x.paidBy])} · ${x.split.length===tr.members.length?t("selectAll"):x.split.map(i=>esc(tr.members[i])).join(", ")}</div></div>
+      <div class="amt out">${fmt(x.amount,cu)}</div></div>`).join("")}</div>`:`<div class="card empty">${t("noExp")}</div>`;
+  }else{
+    h+=`<div class="card"><table><tr><th></th><th>${t("gave")}</th><th>${t("paid")}</th><th>${t("perHead")}</th><th>${t("net")}</th></tr>
+    ${tr.members.map((m,i)=>`<tr><td>${esc(m)}${i===tr.holder?` <span class="muted">(${t("fund")})</span>`:""}</td><td>${fmt(c.gave[i],cu)}</td><td>${fmt(c.paid[i],cu)}</td><td>${fmt(c.share[i],cu)}</td>
+    <td class="${c.bal[i]>=0?"in":"out"}"><b>${fmt(c.bal[i],cu)}</b></td></tr>`).join("")}</table>
+    ${c.left>0.004?`<div class="muted" style="margin-top:8px">${t("fundLeft")}: ${fmt(c.left,cu)} — ${esc(tr.members[tr.holder])} ${t("held")}</div>`:""}</div>`;
+    h+=`<div class="card">`+(c.tx.length?c.tx.map(([a,b,v])=>`<div class="settle"><b>${esc(tr.members[a])}</b><span class="arrow">→</span><b>${esc(tr.members[b])}</b><span style="flex:1"></span><b class="out">${fmt(v,cu)}</b></div>`).join(""):`<div class="empty">${t("allSettled")}</div>`)+`</div>`;
+    h+=`<button class="btn" id="shareBtn">${t("shareWA")}</button>`;
+  }
+  h+=`<div class="actions"><button class="btn sec" id="addMem">${t("addMember")}</button><button class="btn red" id="delTour">${t("deleteTour")}</button></div>`;
+  app.innerHTML=h;
+  $("#tTabs").onclick=e=>{const b=e.target.closest("button");if(b){V.tourTab=b.dataset.tt;render()}};
+  const hs=$("#holderSel");if(hs)hs.onchange=()=>{tr.holder=+hs.value;save();render()};
+  const sb=$("#shareBtn");if(sb)sb.onclick=()=>shareTour(tr);
+  $("#addMem").onclick=()=>{const n=prompt(t("memberName"));if(n&&n.trim()){tr.members.push(n.trim());save();render()}};
+  $("#delTour").onclick=()=>{if(confirm(t("confirmDel"))){S.tours=S.tours.filter(x=>x.id!==tr.id);V.tourId=null;save();render()}};
+}
+function contribForm(){
+  const tr=curTour();
+  openSheet(`<h2>${t("giveFund")}</h2>
+  <label class="f">${t("from")}</label><select id="cM">${tr.members.map((m,i)=>`<option value="${i}">${esc(m)}</option>`).join("")}</select>
+  <label class="f">${t("amount")} (${tr.cur})</label><input id="cAmt" type="number" inputmode="decimal" step="any">
+  <label class="f">${t("note")}</label><input id="cNote">
+  <label class="f">${t("date")}</label><input id="cDate" type="date" value="${today()}">
+  <div class="actions"><button class="btn sec" onclick="closeSheet()" style="flex:1">${t("cancel")}</button><button class="btn" id="cSave" style="flex:2">${t("save")}</button></div>`);
+  $("#cSave").onclick=()=>{const a=parseFloat($("#cAmt").value);if(!(a>0))return toast(t("needAmount"));
+    tr.contribs.push({id:uid(),m:+$("#cM").value,amount:r2(a),note:$("#cNote").value.trim(),date:$("#cDate").value||today()});save();closeSheet();render()};
+}
+function expForm(id){
+  const tr=curTour();const x=id?tr.exps.find(e=>e.id===id):{desc:"",amount:"",paidBy:"fund",split:tr.members.map((_,i)=>i),date:today()};
+  openSheet(`<h2>${t("addExp")}</h2>
+  <label class="f">${t("desc")}</label><input id="xDesc" value="${esc(x.desc)}" placeholder="Hotel, Bus, Lunch…">
+  <label class="f">${t("amount")} (${tr.cur})</label><input id="xAmt" type="number" inputmode="decimal" step="any" value="${x.amount}">
+  <label class="f">${t("paidBy")}</label><select id="xPaid"><option value="fund">${t("fromFund")} (${esc(tr.members[tr.holder])})</option>${tr.members.map((m,i)=>`<option value="${i}" ${x.paidBy===i?"selected":""}>${esc(m)}</option>`).join("")}</select>
+  <label class="f">${t("splitAmong")}</label><div class="checks" id="xSplit"><label><input type="checkbox" id="xAll" ${x.split.length===tr.members.length?"checked":""}> <b>${t("selectAll")}</b></label>
+  ${tr.members.map((m,i)=>`<label><input type="checkbox" value="${i}" ${x.split.includes(i)?"checked":""}> ${esc(m)}</label>`).join("")}</div>
+  <label class="f">${t("date")}</label><input id="xDate" type="date" value="${x.date}">
+  <div class="actions">${id?`<button class="btn red" id="xDel" style="flex:1">${t("delete")}</button>`:`<button class="btn sec" onclick="closeSheet()" style="flex:1">${t("cancel")}</button>`}<button class="btn" id="xSave" style="flex:2">${t("save")}</button></div>`);
+  const boxes=()=>[...document.querySelectorAll("#xSplit input[value]")];
+  $("#xAll").onchange=e=>boxes().forEach(b=>b.checked=e.target.checked);
+  boxes().forEach(b=>b.onchange=()=>$("#xAll").checked=boxes().every(x=>x.checked));
+  $("#xSave").onclick=()=>{const a=parseFloat($("#xAmt").value);if(!(a>0))return toast(t("needAmount"));
+    const sp=boxes().filter(b=>b.checked).map(b=>+b.value);if(!sp.length)return toast(t("needSplit"));
+    const pv=$("#xPaid").value;
+    const ne={id:id||uid(),desc:$("#xDesc").value.trim(),amount:r2(a),paidBy:pv==="fund"?"fund":+pv,split:sp,date:$("#xDate").value||today()};
+    if(id)tr.exps[tr.exps.findIndex(e=>e.id===id)]=ne;else tr.exps.push(ne);save();closeSheet();render()};
+  if(id)$("#xDel").onclick=()=>{if(confirm(t("confirmDel"))){tr.exps=tr.exps.filter(e=>e.id!==id);save();closeSheet();render()}};
+}
+function shareTour(tr){
+  const c=calc(tr),cu=tr.cur;
+  let s=`*${tr.name}*\n${t("totalFund")}: ${fmt(c.fund,cu)}\n${t("totalSpent")}: ${fmt(c.spent,cu)}\n${t("fundLeft")}: ${fmt(c.left,cu)}\n\n*${t("summary")}*\n`;
+  tr.members.forEach((m,i)=>{s+=`• ${m}: ${t("perHead")} ${fmt(c.share[i],cu)}, ${c.bal[i]>=0?t("gets"):t("owes")} ${fmt(Math.abs(c.bal[i]),cu)}\n`});
+  s+=`\n*${t("settle")}*\n`+(c.tx.length?c.tx.map(([a,b,v])=>`${tr.members[a]} → ${tr.members[b]}: ${fmt(v,cu)}`).join("\n"):t("allSettled"));
+  location.href="https://wa.me/?text="+encodeURIComponent(s);
+}
+
+/* ---------- SETTINGS ---------- */
+function renderSettings(){
+  $("#title").textContent=t("settings");
+  app.innerHTML=`<div class="card"><label class="f" style="margin-top:0">${t("language")}</label>
+  <div class="seg" id="lSeg"><button class="n ${S.lang==="en"?"on":""}" data-l="en">English</button><button class="n ${S.lang==="bn"?"on":""}" data-l="bn">বাংলা</button></div>
+  <label class="f">${t("defCur")}</label><select id="dCur">${CURS.map(c=>`<option ${c===S.defCur?"selected":""}>${c}</option>`).join("")}</select></div>
+  <div class="card"><b>${t("backup")}</b><p class="muted">${t("dataNote")}</p>
+  <button class="btn sec" id="exp">${t("exportData")}</button><div style="height:8px"></div>
+  <button class="btn sec" id="impBtn">${t("importData")}</button><input type="file" id="imp" accept=".json,application/json" style="display:none"></div>
+  <div class="card"><b>🔒 ${t("security")}</b>
+  <label class="f">${t("autoLock")}</label><select id="alSel">${[[0,"immediately"],[60,"min1"],[300,"min5"]].map(([v,k])=>`<option value="${v}" ${(S.sec?.after??60)==v?"selected":""}>${t(k)}</option>`).join("")}</select>
+  <div style="height:10px"></div><button class="btn sec" id="chPin">${t("changePin")}</button><div style="height:8px"></div>
+  <button class="btn sec" id="chQ">${t("changeQ")}</button><div style="height:8px"></div>
+  <button class="btn" id="lockNow">${t("lockNow")}</button></div>
+  <div class="card muted">${t("installTip")}</div>`;
+  $("#alSel").onchange=e=>{S.sec.after=+e.target.value;save()};
+  $("#chPin").onclick=()=>Lock.newPin(false);
+  $("#chQ").onclick=()=>Lock.question(false);
+  $("#lockNow").onclick=()=>Lock.lock();
+  $("#lSeg").onclick=e=>{const b=e.target.closest("button");if(b){S.lang=b.dataset.l;save();render()}};
+  $("#dCur").onchange=e=>{S.defCur=e.target.value;V.cur=null;save()};
+  $("#exp").onclick=()=>{const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});const a=document.createElement("a");
+    a.href=URL.createObjectURL(b);a.download=`sk-money-book-backup-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+  $("#impBtn").onclick=()=>$("#imp").click();
+  $("#imp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const d=JSON.parse(x);if(!d.entries||!d.tours)throw 0;
+    if(confirm(t("importData")+"?")){const sec=S.sec;S=migrate(d);S.sec=sec;save();render();toast(t("importOk"))}}catch(_){toast("Invalid file")}})};
+}
+
+/* ---------- sheet / toast / events ---------- */
+function openSheet(h){$("#sheet").innerHTML=h;$("#overlay").classList.add("show")}
+function closeSheet(){$("#overlay").classList.remove("show");closePicker()}
+$("#overlay").onclick=e=>{if(e.target.id==="overlay")closeSheet()};
+let tt;function toast(m){const e=$("#toast");e.textContent=m;e.style.display="block";clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",1800)}
+
+document.querySelector("nav.tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;V.tab=b.dataset.tab;if(V.tab!=="tours")V.tourId=null;render();scrollTo(0,0)};
+$("#langBtn").onclick=()=>{S.lang=S.lang==="en"?"bn":"en";save();render()};
+$("#backBtn").onclick=()=>{V.tourId=null;render()};
+$("#fab").onclick=()=>{if(V.tab==="daily")entryForm();else if(V.tourId){V.tourTab==="fund"?contribForm():expForm()}else tourForm()};
+app.addEventListener("click",e=>{
+  const p=e.target.closest("[data-period]");if(p){V.period=p.dataset.period;return render()}
+  const c=e.target.closest("[data-cur]");if(c){V.cur=c.dataset.cur;return render()}
+  const ed=e.target.closest("[data-edit]");if(ed)return entryForm(ed.dataset.edit);
+  const tc=e.target.closest("[data-tour]");if(tc){V.tourId=tc.dataset.tour;V.tourTab="exp";return render()}
+  const dc=e.target.closest("[data-delc]");if(dc){if(confirm(t("confirmDel"))){const tr=curTour();tr.contribs=tr.contribs.filter(x=>x.id!==dc.dataset.delc);save();render()}return}
+  const ex=e.target.closest("[data-edx]");if(ex)return expForm(ex.dataset.edx);
+});
+/* ---------- PIN lock ---------- */
+async function hash(txt,salt){const data=new TextEncoder().encode(salt+"|"+txt);
+  if(crypto.subtle){const h=await crypto.subtle.digest("SHA-256",data);return[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("")}
+  let h=5381;for(const b of data)h=((h<<5)+h+b)|0;return"x"+(h>>>0).toString(16)}
+const norm=a=>a.trim().toLowerCase().replace(/\s+/g," ");
+const Lock={
+  el:$("#lock"),pin:"",first:null,mode:"unlock",fails:0,until:0,hiddenAt:0,
+  show(h){this.el.innerHTML=h;this.el.classList.add("show")},
+  hide(){this.el.classList.remove("show");this.el.innerHTML=""},
+  pad(title,sub,canCancel){this.pin="";
+    this.show(`<div class="logo">🔒</div><h2>${title}</h2>${sub?`<p>${sub}</p>`:""}<div class="dots" id="dots">${"<i></i>".repeat(4)}</div><div class="lerr" id="lerr"></div>
+    <div class="pad" id="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join("")}
+    <button class="ghost" data-k="x">${canCancel?t("cancel"):""}</button><button data-k="0">0</button><button class="ghost" data-k="b">⌫</button></div>
+    ${this.mode==="unlock"?`<button class="llink" id="forgot">${t("forgot")}</button>`:""}`);
+    $("#pad").onclick=e=>{const b=e.target.closest("button");if(b)this.key(b.dataset.k,canCancel)};
+    const f=$("#forgot");if(f)f.onclick=()=>this.forgot()},
+  dots(){document.querySelectorAll("#dots i").forEach((d,i)=>d.classList.toggle("f",i<this.pin.length))},
+  err(m){const d=$("#dots");$("#lerr").textContent=m;d.classList.remove("shake");void d.offsetWidth;d.classList.add("shake");this.pin="";setTimeout(()=>this.dots(),350)},
+  key(k,canCancel){
+    if(k==="x"){if(canCancel)this.hide();return}
+    if(k==="b"){this.pin=this.pin.slice(0,-1);return this.dots()}
+    if(this.pin.length>=4)return;this.pin+=k;this.dots();
+    if(this.pin.length===4)setTimeout(()=>this.done(canCancel),120)},
+  async done(canCancel){
+    if(this.mode==="unlock"){
+      if(Date.now()<this.until)return this.err(`${t("tooMany")} ${Math.ceil((this.until-Date.now())/1000)} ${t("sec")}`);
+      if(await hash(this.pin,S.sec.salt)===S.sec.pin){this.fails=0;this.hide();render()}
+      else{this.fails++;if(this.fails>=5){this.until=Date.now()+30000;this.fails=0;this.err(`${t("tooMany")} 30 ${t("sec")}`)}else this.err(t("wrongPin"))}
+    }else if(this.mode==="new1"){this.first=this.pin;this.mode="new2";this.pad(t("confirmPin"),"",canCancel)}
+    else if(this.mode==="new2"){
+      if(this.pin!==this.first){this.mode="new1";this.pad(t("setPin"),"",canCancel);return this.err(t("pinMismatch"))}
+      S.sec=S.sec||{after:60};S.sec.salt=S.sec.salt||uid();S.sec.pin=await hash(this.pin,S.sec.salt);save();
+      if(!S.sec.ans)this.question(true);else{this.hide();toast(t("pinOk"));render()}}
+  },
+  newPin(firstTime){this.mode="new1";this.pad(firstTime?t("setPin"):t("newPin"),firstTime?t("welcome"):"",!firstTime)},
+  question(forced){const cur=S.sec?.q??0;
+    this.show(`<div class="logo">🛟</div><h2>${t("secQ")}</h2><p>${t("secHelp")}</p>
+    <div class="box"><label>${t("secQ")}</label><select id="sq">${t("qs").map((q,i)=>`<option value="${i}" ${i===cur?"selected":""}>${esc(q)}</option>`).join("")}</select>
+    <label>${t("secA")}</label><input id="sa" autocomplete="off">
+    <button class="btn" id="sqSave">${t("save")}</button>${forced?"":`<button class="llink" id="sqCancel" style="width:100%">${t("cancel")}</button>`}</div>`);
+    if(!forced)$("#sqCancel").onclick=()=>this.hide();
+    $("#sqSave").onclick=async()=>{const a=norm($("#sa").value);if(!a)return $("#sa").focus();
+      S.sec.q=+$("#sq").value;S.sec.ans=await hash(a,S.sec.salt);save();this.hide();toast(t("saved"));render()}},
+  forgot(){
+    this.show(`<div class="logo">🛟</div><h2>${t("forgot")}</h2>
+    <div class="box"><label>${esc(t("qs")[S.sec.q]||"")}</label><input id="fa" autocomplete="off"><div class="lerr" id="lerr" style="margin-top:8px"></div>
+    <button class="btn" id="faOk">${t("next")}</button><button class="llink" id="faBack" style="width:100%">${t("back")}</button></div>`);
+    $("#faBack").onclick=()=>this.lock();
+    $("#faOk").onclick=async()=>{if(Date.now()<this.until){$("#lerr").textContent=`${t("tooMany")} ${Math.ceil((this.until-Date.now())/1000)} ${t("sec")}`;return}
+      if(await hash(norm($("#fa").value),S.sec.salt)===S.sec.ans){this.mode="new1";this.pad(t("newPin"),"",false)}
+      else{this.fails++;if(this.fails>=5){this.until=Date.now()+30000;this.fails=0}$("#lerr").textContent=t("wrongAns")}}},
+  lock(){if(!S.sec?.pin)return;closeSheet();this.mode="unlock";this.pad(t("enterPin"),"",false)},
+  start(){if(!S.sec?.pin)this.newPin(true);else if(!S.sec.ans)this.question(true);else this.lock()}
+};
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden)Lock.hiddenAt=Date.now();
+  else if(S.sec?.pin&&!Lock.el.classList.contains("show")&&Date.now()-Lock.hiddenAt>=(S.sec.after??60)*1000)Lock.lock()});
+
+render();
+Lock.start();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
