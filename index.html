@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SK Money Book</title>
+<title>SK Money Book Pro</title>
 <meta name="theme-color" content="#0f766e">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="SK Money Book">
+<meta name="apple-mobile-web-app-title" content="SK Money Book Pro">
 <style>
 :root{
   --bg:#f4f6f5;--card:#ffffff;--text:#16211f;--muted:#64716e;--line:#e2e7e5;
@@ -24,6 +24,7 @@
 html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif}
 header{position:sticky;top:0;z-index:5;background:var(--brand);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px}
 header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pro{display:inline-block;vertical-align:middle;margin-left:6px;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#fcd34d,#f59e0b);color:#78350f;font-size:11px;font-weight:800;letter-spacing:.06em;box-shadow:0 1px 2px rgba(0,0,0,.2);position:relative;top:-2px}
 header button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:14px}
 main{padding:14px 16px calc(90px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
 nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
@@ -118,7 +119,7 @@ th{color:var(--muted);font-weight:600}
 <body>
 <header>
   <button id="backBtn" style="display:none" aria-label="Back">←</button>
-  <h1 id="title">SK Money Book</h1>
+  <h1 id="title">SK Money Book <span class="pro">PRO</span></h1>
   <button id="langBtn">বাংলা</button>
 </header>
 <main id="app"></main>
@@ -237,7 +238,7 @@ function render(){
 /* ---------- DAILY ---------- */
 function inPeriod(d){if(V.period==="all")return true;const td=today();return V.period==="today"?d===td:d.slice(0,7)===td.slice(0,7)}
 function renderDaily(){
-  $("#title").textContent=t("app");
+  $("#title").innerHTML=esc(t("app"))+' <span class="pro">PRO</span>';
   const cur=V.cur||S.defCur;
   const all=S.entries.filter(e=>e.cur===cur);
   const list=all.filter(e=>inPeriod(e.date)).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));

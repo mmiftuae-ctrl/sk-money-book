@@ -1,6 +1,6 @@
 {
-  "name": "SK Money Book",
-  "short_name": "SK Money",
+  "name": "SK Money Book Pro",
+  "short_name": "SK Money Pro",
   "description": "Daily income & expenses, and tour expense split with friends",
   "start_url": "./index.html",
   "scope": "./",
